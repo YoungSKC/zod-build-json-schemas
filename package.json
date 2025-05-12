@@ -2,12 +2,10 @@
   "name": "zod-build-json-schemas",
   "version": "0.0.1",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "author": "Zapotinschii Augustin",
   "license": "MIT",
   "description": "Utility to work with zod-to-json-schema",
-  "publishConfig": {
-    "access": "restricted"
-  },
   "scripts": {
     "watch": "tsc -w -p tsconfig.build.json",
     "start": "node dist/index",
