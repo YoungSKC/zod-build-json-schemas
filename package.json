@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "author": "Zapotinschii Augustin",
   "license": "MIT",
-  "description": "Utility to work with zod-to-json-schema",
+  "description": "Wrapper around zod-to-json-schema, that makes it easier to use it with Fastify & OpenAPI.",
   "scripts": {
     "watch": "tsc -w -p tsconfig.build.json",
     "start": "node dist/index",
@@ -18,5 +18,17 @@
   "dependencies": {
     "zod": "^3.24.4",
     "zod-to-json-schema": "^3.24.5"
-  }
+  },
+  "keywords": [
+    "fastify",
+    "fastify-zod",
+    "zod",
+    "openapi",
+    "swagger",
+    "json-schema",
+    "zod-to-json-schema",
+    "validation",
+    "schema-validation",
+    "typescript"
+  ]
 }
