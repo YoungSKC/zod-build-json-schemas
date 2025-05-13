@@ -78,7 +78,7 @@ $ref('loginBody') // => { $ref: 'auth#/properties/loginBody' }
 ```
 
 ## Fastify Integration example
-1 - declare schemas (auth/schemas.ts)
+1. declare schemas (auth/schemas.ts)
 ```ts
 import z from "zod";
 import { buildJsonSchemas } from "zod-build-json-schemas";
@@ -104,7 +104,7 @@ export const { schemas: authSchemas, $ref } = buildJsonSchemas(
 // types
 export type LoginBody = z.infer<typeof loginBody>;
 ```
-2 - register schemas (auth/index.ts)
+2. register schemas (auth/index.ts)
 ```ts
 import { FastifyInstance } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
@@ -120,7 +120,7 @@ export default fastifyPlugin(async (fastify: FastifyInstance) => {
   await fastify.register(authRoutes);
 });
 ```
-3 - reference schemas in routes (auth/routes.ts)
+3. reference schemas in routes (auth/routes.ts)
 ```ts
 import { FastifyInstance } from 'fastify';
 import { $ref } from './schemas';
@@ -140,7 +140,7 @@ export default async (fastify: FastifyInstance) => {
   ); // ✔️
 };
 ```
-4 (optional) - register @fastify/swagger & @fastify/swagger-ui plugins
+4. (optional) register @fastify/swagger & @fastify/swagger-ui plugins
 ```ts
 import fastifyPlugin from "fastify-plugin";
 import { FastifyInstance } from "fastify";
@@ -177,7 +177,7 @@ export default fastifyPlugin(
 * It overrides `basePath`, you cannot specify it  
 * Default for `$refStrategy` is 'none' | reason: better integration with [openapi-typescript](https://github.com/openapi-ts/openapi-typescript)
 ### Override default options
-1 - Create `buildJsonSchemas` function using `createBuildJsonSchemas` utility & pass in the overrides
+1. Create `buildJsonSchemas` function using `createBuildJsonSchemas` utility & pass in the overrides
 ```ts
 import { createBuildJsonSchemas } from "zod-build-json-schemas";
 
@@ -185,7 +185,7 @@ const buildJsonSchemas = createBuildJsonSchemas({ $refStrategy: 'root' })
 
 export default buildJsonSchemas;
 ```
-2 - Use it
+2. Use it
 ```ts
 import buildJsonSchemas from "~/utils/buildJsonSchemas";
 ```

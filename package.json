@@ -1,15 +1,24 @@
 {
   "name": "zod-build-json-schemas",
-  "version": "0.0.1",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "version": "1.0.0",
   "author": "Zapotinschii Augustin",
   "license": "MIT",
   "description": "Wrapper around zod-to-json-schema, that makes it easier to use it with Fastify & OpenAPI.",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.mjs",
+  "types": "dist/types/index.d.ts",
+  "type": "module",
+  "exports": {
+    "import": "./dist/esm/index.mjs",
+    "require": "./dist/cjs/index.js",
+    "default": "./dist/esm/index.js",
+    "types": "./dist/types/index.d.ts"
+  },
   "scripts": {
-    "watch": "tsc -w -p tsconfig.build.json",
-    "start": "node dist/index",
-    "build": "tsc -p tsconfig.build.json"
+    "build:esm": "tsc -p tsconfig.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "npm run build:esm && npm run build:cjs",
+    "dry-publish": "npm publish --dry-run"
   },
   "devDependencies": {
     "@types/node": "^22.1.0",
@@ -19,13 +28,24 @@
     "zod": "^3.24.4",
     "zod-to-json-schema": "^3.24.5"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zapotinschii/zod-build-json-schemas.git"
+  },
+  "homepage": "https://github.com/zapotinschii/zod-build-json-schemas#readme",
+  "bugs": {
+    "url": "https://github.com/zapotinschii/zod-build-json-schemas/issues"
+  },
   "keywords": [
     "fastify",
-    "fastify-zod",
     "zod",
     "openapi",
     "swagger",
-    "json-schema",
+    "json",
+    "schema",
     "zod-to-json-schema",
     "validation",
     "schema-validation",
