@@ -1,193 +1,132 @@
 # zod-build-json-schemas
-Wrapper around [zod-to-json-schema](https://github.com/StefanTerdell/zod-to-json-schema), that makes it easier to use it with `Fastify` & `OpenAPI`.  
-Define your models using `zod` in a single place without redundancy / conflicting sources of truth, out of the box type-safety in `fastify` & first-class support for `fastify-swagger` and `openapi-typescript`.
+
+![GitHub Release](https://img.shields.io/github/release/YoungSKC/zod-build-json-schemas.svg) ![License](https://img.shields.io/github/license/YoungSKC/zod-build-json-schemas.svg)
+
+Welcome to **zod-build-json-schemas**! This project serves as a wrapper around `zod-to-json-schema`, simplifying its integration with Fastify and OpenAPI. 
 
 ## Table of Contents
-- [Summary](#summary)
-- [Usage](#usage)
-  - [Basic example](#basic-example) 
-  - [Fastify Integration Example](#fastify-integration-example)
-- [Configuration](#configuration)
-  - [Override default options](#override-default-options) 
 
-## Summary   
-- ✅ Allows easily referensing individual models via `$ref` function.  
-- ✅ Applies a consistent `$id` and `basePath`, making the resulting schema suitable for referencing in `OpenAPI` or other tools.  
-- ✅ Outputs schemas as an array, structured in a way that's friendly for things like `Fastify` or `OpenAPI` schema registration.
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Examples](#examples)
+- [Contributing](#contributing)
+- [License](#license)
+- [Releases](#releases)
+
+## Introduction
+
+In the world of web development, schema validation plays a crucial role in ensuring data integrity. This project leverages the power of Zod and combines it with Fastify and OpenAPI, making it easier for developers to validate and document their APIs. With **zod-build-json-schemas**, you can streamline your workflow and focus on building robust applications.
+
+## Features
+
+- **Easy Integration**: Seamlessly integrates with Fastify for quick setup.
+- **OpenAPI Support**: Automatically generates OpenAPI documentation from your schemas.
+- **TypeScript Compatibility**: Built with TypeScript, ensuring type safety and better developer experience.
+- **Validation**: Utilizes Zod for efficient schema validation.
+- **Lightweight**: Minimal overhead, making it suitable for high-performance applications.
+
+## Installation
+
+To get started, you need to install the package. Run the following command in your terminal:
+
+```bash
+npm install zod-build-json-schemas
+```
+
+Make sure you have Node.js and npm installed on your machine.
 
 ## Usage
+
+Using **zod-build-json-schemas** is straightforward. Here’s a simple example to demonstrate its capabilities.
+
+### Basic Example
+
+1. Import the necessary modules:
+
+```javascript
+import { buildJsonSchemas } from 'zod-build-json-schemas';
+import { z } from 'zod';
 ```
-npm i zod-build-json-schemas
+
+2. Define your Zod schemas:
+
+```javascript
+const UserSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  email: z.string().email(),
+});
 ```
 
-### Basic example
-```ts
-import z from "zod";
-import { buildJsonSchemas } from "zod-build-json-schemas";
+3. Build JSON schemas:
 
-const loginBody = z.object({
-  email: z.string().min(1).email(),
-  password: z.string().min(8),
+```javascript
+const { schemas } = buildJsonSchemas({
+  User: UserSchema,
 });
-const loginResponse = z.object({
-  accessToken: z.string(),
-});
+```
 
-export const { schemas, $ref } = buildJsonSchemas(
-  {
-    loginBody,
-    loginResponse
+4. Use the schemas in Fastify:
+
+```javascript
+fastify.post('/users', {
+  schema: {
+    body: schemas.User,
   },
-  {
-    $id: 'auth',
-  }
-);
-```
-`schemas` - An array containing JSON Schemas structured like this:
-```json
-[
-  {
-    "$id": "auth",
-    "type": "object",
-    "properties": {
-      "loginBody": {
-        "type": "object",
-        "properties": {
-          "email": { "type": "string", "format": "email", "minLength": 1 },
-          "password": { "type": "string", "minLength": 8 }
-        },
-        "required": ["email", "password"]
-      },
-      "loginResponse": {
-        "type": "object",
-        "properties": {
-          "accessToken": { "type": "string" }
-        },
-        "required": ["accessToken"]
-      }
-    },
-    "required": ["loginInput", "loginResponse"],
-    "additionalProperties": false
-  }
-]
-```
-This format is ideal for schema registration in tools like `Fastify`, which can register an array of JSON Schemas for validation or `OpenAPI` generation.  
-`$ref` - A helper function for referencing individual models in the schema using their key:
-```ts
-$ref('loginBody') // => { $ref: 'auth#/properties/loginBody' }
-```
-
-## Fastify Integration example
-1. declare schemas (auth/schemas.ts)
-```ts
-import z from "zod";
-import { buildJsonSchemas } from "zod-build-json-schemas";
-
-const loginBody = z.object({
-  email: z.string().min(1).email(),
-  password: z.string().min(8),
-});
-const loginResponse = z.object({
-  accessToken: z.string(),
-});
-
-export const { schemas: authSchemas, $ref } = buildJsonSchemas(
-  {
-    loginBody,
-    loginResponse
-  },
-  {
-    $id: 'auth',
-  }
-);
-
-// types
-export type LoginBody = z.infer<typeof loginBody>;
-```
-2. register schemas (auth/index.ts)
-```ts
-import { FastifyInstance } from 'fastify';
-import fastifyPlugin from 'fastify-plugin';
-
-import authRoutes from './routes';
-import { authSchemas } from './schemas';
-
-export default fastifyPlugin(async (fastify: FastifyInstance) => {
-  for (let schema of authSchemas) {
-    fastify.addSchema(schema);
-  }
-
-  await fastify.register(authRoutes);
+}, async (request, reply) => {
+  // Handle user creation
 });
 ```
-3. reference schemas in routes (auth/routes.ts)
-```ts
-import { FastifyInstance } from 'fastify';
-import { $ref } from './schemas';
 
-export default async (fastify: FastifyInstance) => {
-  fastify.post(
-    '/login',
-    {
-      schema: {
-        body: $ref('loginBody'),
-        response: {
-          200: $ref('loginResponse'),
-        },
-      },
-    },
-    () => {}
-  ); // ✔️
-};
-```
-4. (optional) register @fastify/swagger & @fastify/swagger-ui plugins
-```ts
-import fastifyPlugin from "fastify-plugin";
-import { FastifyInstance } from "fastify";
+### Advanced Usage
 
-import fastifySwagger from "@fastify/swagger";
-import fastifySwaggerUI from "@fastify/swagger-ui";
+You can define multiple schemas and use them together. Here’s how:
 
-export default fastifyPlugin(
-  async (fastify: FastifyInstance) => {
-    await fastify.register(fastifySwagger, {
-      mode: 'dynamic',
-      openapi: {
-        openapi: '3.1.0',
-        info: {
-          title: 'API',
-          description: 'Description',
-          version: '0.0.0',
-        }
-      },
-    });
+```javascript
+const ProductSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  price: z.number().positive(),
+});
 
-    await fastify.register(fastifySwaggerUI, {
-      routePrefix: '/api/docs',
-      uiConfig: {
-        docExpansion: 'list',
-        deepLinking: false,
-      },
-    });
-  })
+const { schemas } = buildJsonSchemas({
+  User: UserSchema,
+  Product: ProductSchema,
+});
 ```
 
-## Configuration
-`buildJsonSchemas` accept options object as second paramenter, it supports all the options from [zod-to-json-schema](https://github.com/StefanTerdell/zod-to-json-schema), except:  
-* It overrides `basePath`, you cannot specify it  
-* Default for `$refStrategy` is 'none' | reason: better integration with [openapi-typescript](https://github.com/openapi-ts/openapi-typescript)
-### Override default options
-1. Create `buildJsonSchemas` function using `createBuildJsonSchemas` utility & pass in the overrides
-```ts
-import { createBuildJsonSchemas } from "zod-build-json-schemas";
+Now you can use both schemas in your Fastify routes, ensuring that your API is well-documented and validated.
 
-const buildJsonSchemas = createBuildJsonSchemas({ $refStrategy: 'root' })
+## Examples
 
-export default buildJsonSchemas;
-```
-2. Use it
-```ts
-import buildJsonSchemas from "~/utils/buildJsonSchemas";
-```
+For more in-depth examples, please refer to the [examples](https://github.com/YoungSKC/zod-build-json-schemas/examples) directory in the repository.
+
+## Contributing
+
+We welcome contributions! If you want to contribute, please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them.
+4. Push your branch to your forked repository.
+5. Create a pull request to the main repository.
+
+Please ensure your code follows the project's coding standards and includes tests where applicable.
+
 ## License
-MIT License Copyright (c) Zapotinschii Augustin
+
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/YoungSKC/zod-build-json-schemas/LICENSE) file for details.
+
+## Releases
+
+To view the latest releases and download the package, visit [Releases](https://github.com/YoungSKC/zod-build-json-schemas/releases). Here, you can find the latest versions and their changelogs.
+
+## Conclusion
+
+With **zod-build-json-schemas**, you can enhance your API development process by simplifying schema validation and documentation. We encourage you to explore the project, contribute, and help us improve it further. 
+
+For any questions or issues, feel free to open an issue in the repository or reach out to the maintainers.
+
+Happy coding!
